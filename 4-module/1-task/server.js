@@ -10,8 +10,6 @@ server.on('request', (req, res) => {
 
   const filepath = path.join(__dirname, 'files', pathname);
 
-  console.log('pathname - ', pathname, '\nfilepath - ', filepath)
-
   switch (req.method) {
     case 'GET':
       const content = fse.pathExistsSync(filepath);
