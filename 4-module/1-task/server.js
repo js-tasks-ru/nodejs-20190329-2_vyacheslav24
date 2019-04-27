@@ -1,6 +1,7 @@
 const url = require('url');
 const http = require('http');
 const path = require('path');
+const fse = require('fs-extra');
 
 const server = new http.Server();
 
@@ -11,7 +12,20 @@ server.on('request', (req, res) => {
 
   switch (req.method) {
     case 'GET':
+      const content = fse.pathExistsSync(filepath);
 
+      if (pathname.indexOf('/') !== -1 || pathname.indexOf('\\') !== -1) {
+        res.statusCode = 400;
+        res.end('Nested path is not supported');
+      } else if (!content) {
+        res.statusCode = 404;
+        res.end('Not found');
+      } else {
+        const stream = fse.createReadStream(filepath);
+
+        stream.pipe(res);
+      }
+      
       break;
 
     default:
