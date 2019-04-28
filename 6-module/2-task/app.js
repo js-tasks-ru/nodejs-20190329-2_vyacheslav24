@@ -14,6 +14,13 @@ app.use(async (ctx, next) => {
     if (err.status) {
       ctx.status = err.status;
       ctx.body = {error: err.message};
+    } else if (err.name === 'ValidationError') {
+      ctx.status = 400;
+      const errorMessages = {errors: {}};
+      Object.keys(err.errors).forEach((error) => {
+        errorMessages.errors[error] = err.errors[error].message;
+      });
+      ctx.body = errorMessages;
     } else {
       ctx.status = 500;
       ctx.body = {error: 'Internal server error'};
@@ -45,15 +52,13 @@ router.get('/users/:id', async (ctx) => {
 
 router.patch('/users/:id', async (ctx) => {
   const id = ctx.params.id;
-  
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     ctx.status = 400;
     return;
   }
 
-  const updatedUser = await User.findByIdAndUpdate(id, {$set: ctx.request.body}, {new: true}, function(err) {
-
-  });
+  const updatedUser = await User.findByIdAndUpdate(id, {$set: ctx.request.body}, {new: true, runValidators: true });
 
   if (updatedUser) {
     ctx.body = updatedUser;
@@ -81,7 +86,6 @@ router.delete('/users/:id', async (ctx) => {
   if (deletedUser) {
     ctx.body = deletedUser;
   }
-
 });
 
 app.use(router.routes());
